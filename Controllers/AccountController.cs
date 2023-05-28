@@ -31,9 +31,10 @@ namespace Chatrum {
 
                 // Sign in the user
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-
-                // Redirect to a protected page or the homepage
-                return Redirect("http://daliborg.8u.cz/Chatrum");
+                // if identity exists - You are already logged in?
+                // vrati jen zpravu, redirect tady, nebo pak? a jak to pozna ze je nekdo autorizovany? prece na tu stranku pujde jit
+                // i bez loginu?
+                return Ok("Login successful.");
             }
 
             // Invalid credentials, show error message
@@ -47,7 +48,7 @@ namespace Chatrum {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             // Redirect to the homepage or a public page
-            return Ok("Logout. Bye!");
+            return Ok("Logout.");
         }
 
         private bool IsValidUser(string username, string password) {
@@ -67,9 +68,11 @@ namespace Chatrum {
                 // Create a new user based on the registration form data
                 var user = new User {
                     Name = model.Name,
+                    UserName = model.Name,
                     Email = model.Email,
                     Password = model.Password,
                     RegistrationTime = DateTime.Now,
+                    
                 };
 
                 // Use the UserManager to create the user
@@ -79,20 +82,21 @@ namespace Chatrum {
                     // Optionally, you can sign in the user after registration
                     await _signInManager.SignInAsync(user, isPersistent: false);
 
+                    //_context.Users.Add(user);
+                    //_context.SaveChanges();
                     // Redirect to a protected page or the homepage
-                    return RedirectToAction("Index", "Home");
+                    return Ok(model);
                 }
 
                 // If registration failed, add the errors to the ModelState
                 foreach (var error in result.Errors) {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                _context.Users.Add(user);
-                _context.SaveChanges();
+                return BadRequest(result);
             }
 
             // If there are validation errors, show the registration form with error messages
-            return Ok(model);
+            return BadRequest(model);
         }
         //[HttpPut("ChangeProfile")]
         //public IEnumerable<User> ChangeProfileSettings(string? name) {

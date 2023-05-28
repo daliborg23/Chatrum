@@ -5,13 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options => {
-    options.AddDefaultPolicy(builder => {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
-});
 
 
 
@@ -22,6 +15,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(builder => {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 
 
 builder.Services.AddIdentity<User, IdentityRole>() // ??
@@ -51,21 +51,15 @@ if (app.Environment.IsDevelopment()) {
 app.UseSwagger();
 app.UseSwaggerUI();
 
-
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-
+app.UseHttpsRedirection();
 
 app.UseCors();
 
-
-
-app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-
