@@ -33,7 +33,7 @@ namespace Chatrum {
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
                 // Redirect to a protected page or the homepage
-                return Ok("Logged in. Wellcome " + username);
+                return Redirect("http://daliborg.8u.cz/Chatrum");
             }
 
             // Invalid credentials, show error message
