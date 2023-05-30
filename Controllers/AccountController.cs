@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using System.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace Chatrum {
     [Route("[controller]")]
@@ -20,28 +23,60 @@ namespace Chatrum {
             _userManager = userManager;
             _signInManager = signInManager;
         }
-
+        
         [HttpPost("Login")]
-        public async Task<IActionResult> Login(string username, string password) {
-            // Validate the user's credentials
-            if (IsValidUser(username, password)) {
-                // Create claims for the authenticated user
-                var claims = new[] { new Claim(ClaimTypes.Name, username) };
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        public async Task<IActionResult> Login(LoginViewModel login) { //string username, string password
+            var user = await _userManager.FindByNameAsync(login.Name);
 
-                // Sign in the user
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-                // if identity exists - You are already logged in?
-                // vrati jen zpravu, redirect tady, nebo pak? a jak to pozna ze je nekdo autorizovany? prece na tu stranku pujde jit
-                // i bez loginu?
-                return Ok("Login successful.");
+            if (user != null && await _userManager.CheckPasswordAsync(user, login.Password)) {
+                var claims = new[]
+                {
+                new Claim(ClaimTypes.Name, user.UserName)
+                // Add additional claims as needed
+                };
+                SecretKey sc = new SecretKey();
+                
+                var token = GenerateJwtToken(SecretKey._secretKey, "Chatrum-Issuer", "audience", 10, claims);
+
+                // Use the SignInManager to sign in the user
+                await _signInManager.SignInAsync(user, isPersistent: false);
+
+                return Ok(new { Token = token });
             }
 
-            // Invalid credentials, show error message
             ModelState.AddModelError(string.Empty, "Invalid username or password");
             return BadRequest("Invalid username or password");
-        }
 
+
+            //var claims = new[] { new Claim(ClaimTypes.Name, login.Name) };
+            // if identity exists - You are already logged in?
+            // vrati jen zpravu, redirect tady, nebo pak? a jak to pozna ze je nekdo autorizovany? prece na tu stranku pujde jit
+            // i bez loginu?
+            //var token = GenerateJwtToken(SecretKey._secretKey, "Chatrum-Issuer","audience",10,claims);
+            //prirazeni do UserTokens tabulky?
+            //return Ok(new { Token = token });
+            //_context.UserTokens.Add(token);
+            //_context.SaveChanges();
+
+            //return Ok(new { Token = token });
+            //return Ok("Login successful.");
+
+            ////
+            string GenerateJwtToken(string secretKey, string issuer, string audience, int expiryMinutes, Claim[] claims) {
+                var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+                var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(
+                    issuer: issuer,
+                    audience: audience,
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                    signingCredentials: credentials
+                );
+                var tokenHandler = new JwtSecurityTokenHandler();
+                return tokenHandler.WriteToken(token);
+            }
+        }
         [HttpGet("Logout")]
         public async Task<IActionResult> Logout() {
             // Sign out the user
@@ -51,16 +86,15 @@ namespace Chatrum {
             return Ok("Logout.");
         }
 
-        private bool IsValidUser(string username, string password) {
-            // Validate the user's credentials against the database or other storage
-            // Return true if the credentials are valid; otherwise, return false
-            // You can use a membership provider, Identity framework, or custom logic for validation
-            // This is just an example, you should replace it with your own validation logic
+        //private bool IsValidUser(string username, string password) {
+        //    // Validate the user's credentials against the database or other storage
+        //    // Return true if the credentials are valid; otherwise, return false
+        //    // You can use a membership provider, Identity framework, or custom logic for validation
+        //    // This is just an example, you should replace it with your own validation logic
             
-            if (_context.Users.Where(x => x.Name == username && x.Password == password).Any()) return true;
-            return false;
-            
-        }
+        //    if (_context.Users.Where(x => x.Name == username && x.Password == password).Any()) return true;
+        //    return false;
+        //}
 
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterViewModel model) {
@@ -85,6 +119,7 @@ namespace Chatrum {
                     //_context.Users.Add(user);
                     //_context.SaveChanges();
                     // Redirect to a protected page or the homepage
+                    // return Ok("Registration successful.")
                     return Ok(model);
                 }
 
