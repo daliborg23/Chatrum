@@ -6,11 +6,12 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace Chatrum // page Controller?
 {
     [Authorize]
-    public class DashboardModel : PageModel
+    public class DashboardModel : PageModel // tohle budou zpravy, a nahore textbox na pridani zpravy, tohle pridat to 
     {
         public string Name { get; set; }
         public string UserList { get; set; }
         private readonly UserDbContext _context;
+        public List<User> UsersTable { get; set; }
         public DashboardModel(UserDbContext UserDbContext) {
             _context = UserDbContext;
         }
@@ -20,7 +21,7 @@ namespace Chatrum // page Controller?
             UserList = "Registered users: ";
 
             ViewData["name"] = Name;
-
+            UsersTable = _context.Users.ToList();
             List<User> users = _context.Users.ToList();
             foreach (var user in users) {
                 UserList += user.Name+", ";
