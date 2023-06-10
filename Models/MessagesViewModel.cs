@@ -8,5 +8,6 @@ namespace Chatrum.Models {
 		public string PostBy { get; set; }
 		[Required]
 		public string Message { get; set; }
+		public DateTime Created { get; set; }
 	}
 }

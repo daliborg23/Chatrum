@@ -18,15 +18,8 @@ namespace Chatrum.Controllers {
             _signInManager = signInManager;
         }
         [HttpGet("Messages")]
-        public async Task<IActionResult> Messages(string? id) {
-            List<MessagesViewModel> messages = new List<MessagesViewModel>();
-            var dbMessages = _context.Messages.ToList();
-            foreach (var dbMessage in dbMessages) {
-                MessagesViewModel messageViewModel = new MessagesViewModel {
-                    Id = dbMessage.Id,
-                };
-                messages.Add(messageViewModel);
-            }
+        public async Task<IActionResult> Messages(string? id) { // radit podle vzniku od nejnovejsich po nejstarsich
+            var messages = _context.Messages.ToList();
             return Ok(messages);
         }
         [HttpPost("NewMessage")]
