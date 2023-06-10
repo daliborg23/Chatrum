@@ -2,8 +2,9 @@
 using System.Security.Policy;
 
 namespace Chatrum.Models {
-	public class MessageViewModel {
+	public class MessagesViewModel {
 		public string Id { get; set; }
+		[Required]
 		public string PostBy { get; set; }
 		[Required]
 		public string Message { get; set; }

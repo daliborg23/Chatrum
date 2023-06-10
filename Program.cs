@@ -10,28 +10,14 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
-
-
+using Chatrum.Controllers;
+using Chatrum.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
-
-
-// Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-//builder.Services.AddCors(options => {
-//    options.AddDefaultPolicy(builder => {
-//        builder.AllowAnyOrigin()
-//               .AllowAnyMethod()
-//               .AllowAnyHeader();
-//    });
-//});
 
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(builder => {
@@ -42,26 +28,11 @@ builder.Services.AddCors(options => {
     });
 });
 
-//builder.Services.AddCors(options => {
-//    options.AddDefaultPolicy(builder => {
-//        builder.WithOrigins("https://test23.somee.com", "http://daliborg.8u.cz/", "http://daliborg.8u.cz/login.html", "http://daliborg.8u.cz/Chatrum")
-//            .AllowAnyHeader()
-//            .AllowAnyMethod();
-//    });
-//});
-//builder.Services.AddCors(options => {
-//    options.AddDefaultPolicy(builder => {
-//        builder.WithOrigins("http://localhost:7251")
-//            .AllowAnyHeader()
-//            .AllowAnyMethod();
-//    });
-//});
-
-builder.Services.AddIdentity<User, IdentityRole>() // ??
-      .AddEntityFrameworkStores<UserDbContext>()
+builder.Services.AddIdentity<UsersViewModel, IdentityRole>() // ??
+      .AddEntityFrameworkStores<ApplicationDbContext>()
       .AddDefaultTokenProviders();
-builder.Services.AddDbContext<UserDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("UserDbContext"))
+builder.Services.AddDbContext<ApplicationDbContext>(
+    options => options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContext"))
     );
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -77,25 +48,17 @@ builder.Services.AddAuthentication(options => {
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey._secretKey))
         };
     });
-builder.Services.AddScoped<UserManager<User>>();
-builder.Services.AddScoped<SignInManager<User>>();
+builder.Services.AddScoped<UserManager<UsersViewModel>>();
+builder.Services.AddScoped<SignInManager<UsersViewModel>>();
 
 builder.Services.AddRazorPages();
 builder.Services.AddRazorPages(options => {
     options.Conventions.AuthorizePage("/Dashboard");
+    options.Conventions.AuthorizePage("/Users");
 });
-
-
 
 var app = builder.Build();
 
-
-
-
-
-
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -115,14 +78,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
-//app.UseCors(builder =>
-//    builder
-//        .AllowAnyOrigin()
-//        .AllowAnyMethod()
-//        .AllowAnyHeader());
-//app.UseCors("AllowOrigin");
-
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

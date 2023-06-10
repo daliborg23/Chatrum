@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Chatrum.Migrations
 {
-    [DbContext(typeof(UserDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20230527210125_InitMigration")]
     partial class InitMigration
     {
