@@ -19,29 +19,31 @@ namespace Chatrum.Controllers {
         }
         [HttpGet("Messages")]
         public async Task<IActionResult> Messages(string? id) {
-            if (string.IsNullOrEmpty(id)) return (IActionResult)_context.Messages.ToList();
-            return (IActionResult)_context.Messages.Where(x => x.Id.ToString() == id);
+            List<MessagesViewModel> messages = new List<MessagesViewModel>();
+            var dbMessages = _context.Messages.ToList();
+            foreach (var dbMessage in dbMessages) {
+                MessagesViewModel messageViewModel = new MessagesViewModel {
+                    Id = dbMessage.Id,
+                };
+                messages.Add(messageViewModel);
+            }
+            return Ok(messages);
         }
         [HttpPost("NewMessage")]
         public async Task<IActionResult> NewMessage(MessagesViewModel model) {
             var user = await _userManager.GetUserAsync(User);
             if (ModelState.IsValid) {
-                var message = new MessagesViewModel {
-                   PostBy = user.Id,
-                   Message = model.Message
+                MessagesViewModel message = new MessagesViewModel {
+                    //Id = Guid.NewGuid().ToString(),
+                    //PostBy = user.Id,
+                    PostBy = "0000000-0000-0000-0000-00000000000",
+                    Message = model.Message
                 };
-                await _context.AddAsync(message);
-                List<MessagesViewModel> messages = new List<MessagesViewModel>();
-                var dbMessages = _context.Messages.ToList();
-                foreach (var dbMessage in dbMessages) {
-                    MessagesViewModel messageViewModel = new MessagesViewModel {
-                        Id = dbMessage.Id,
-                    };
-                    messages.Add(messageViewModel);
-                }
-                return Ok(messages);
+                _context.Messages.Add(message);
+                await _context.SaveChangesAsync();
+                return Ok(model);
             }
-            return BadRequest(model);
+            return BadRequest(ModelState);
         }
     }
 }
